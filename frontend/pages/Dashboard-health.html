@@ -3,54 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health Department - UOE Safe App</title>
+    <title>UoE Safe - Health Department</title>
     <link rel="stylesheet" href="../Styles/Dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <h1>UOE Safe App - Health Department</h1>
+    <!-- Navigation Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>UoE Safe</h2>
+            <p>Health Department</p>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="menu-item active" data-target="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </li>
+            <li class="menu-item" data-target="health-data">
+                <i class="fas fa-heartbeat"></i>
+                <span>Health Data</span>
+            </li>
+            <li class="menu-item" data-target="analytics">
+                <i class="fas fa-chart-bar"></i>
+                <span>Health Analytics</span>
+            </li>
+            <li class="menu-item" data-target="system">
+                <i class="fas fa-cog"></i>
+                <span>System Settings</span>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
             <div class="user-info">
-                <span id="userEmail">Loading...</span>
-                <button onclick="logout()" class="logout-btn">Logout</button>
+                <div class="user-avatar">HD</div>
+                <div class="user-details">
+                    <span class="user-name" id="sidebar-user-name">Loading...</span>
+                    <span class="user-role">Health Department</span>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="content-header">
+            <div class="header-left">
+                <h1 id="page-title">Health Dashboard</h1>
+                <p id="page-subtitle">University of Eldoret Health Department</p>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search health records..." id="health-search">
+                </div>
+                <div class="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </div>
             </div>
         </header>
-        
-        <main class="dashboard-main">
-            <div class="welcome-section">
-                <h2>Welcome to Health Department Dashboard</h2>
-                <p>Manage health-related incidents and safety reports</p>
-            </div>
-            
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <!-- Statistics Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>Total Incidents</h3>
-                    <p class="stat-number" id="totalIncidents">0</p>
+                    <div class="stat-icon total-reports">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-health-records">0</h3>
+                        <p>Total Health Records</p>
+                    </div>
                 </div>
+                
                 <div class="stat-card">
-                    <h3>Pending Reports</h3>
-                    <p class="stat-number" id="pendingReports">0</p>
+                    <div class="stat-icon pending">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="mental-health-cases">0</h3>
+                        <p>Mental Health Cases</p>
+                    </div>
                 </div>
+                
                 <div class="stat-card">
-                    <h3>Resolved Cases</h3>
-                    <p class="stat-number" id="resolvedCases">0</p>
+                    <div class="stat-icon resolved">
+                        <i class="fas fa-female"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="womens-health">0</h3>
+                        <p>Women's Health</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon users">
+                        <i class="fas fa-male"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="mens-health">0</h3>
+                        <p>Men's Health</p>
+                    </div>
                 </div>
             </div>
-            
-            <div class="quick-actions">
-                <h3>Quick Actions</h3>
-                <div class="action-buttons">
-                    <button class="action-btn">View Incidents</button>
-                    <button class="action-btn">Create Report</button>
-                    <button class="action-btn">Manage Resources</button>
-                </div>
-            </div>
-        </main>
-    </div>
 
+            <!-- Charts and Recent Activity -->
+            <div class="dashboard-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Health Concerns Distribution</h3>
+                    </div>
+                    <canvas id="healthChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Gender Distribution</h3>
+                    </div>
+                    <canvas id="genderChart"></canvas>
+                </div>
+                
+                <div class="recent-activity">
+                    <div class="activity-header">
+                        <h3>Recent Health Submissions</h3>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <div class="activity-list" id="recent-health-list">
+                        <!-- Health submissions will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="priority-stats">
+                    <div class="priority-header">
+                        <h3>Top Health Concerns</h3>
+                    </div>
+                    <div class="priority-list" id="health-concerns-list">
+                        <!-- Health concerns will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Health Data Section -->
+        <section id="health-data" class="content-section">
+            <div class="section-header">
+                <h2>Health Data Management</h2>
+                <div class="header-actions">
+                    <div class="filters">
+                        <select id="gender-filter">
+                            <option value="">All Genders</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                        <select id="location-filter">
+                            <option value="">All Locations</option>
+                            <option value="Hostel A">Hostel A</option>
+                            <option value="Hostel B">Hostel B</option>
+                            <option value="Off-Campus">Off-Campus</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="exportHealthData()">
+                        <i class="fas fa-download"></i> Export Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Reg Number</th>
+                            <th>Email</th>
+                            <th>Gender</th>
+                            <th>Location</th>
+                            <th>Main Complaint</th>
+                            <th>Mental Health</th>
+                            <th>Women's Health</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="health-table-body">
+                        <!-- Health data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Health Analytics Section -->
+        <section id="analytics" class="content-section">
+            <div class="section-header">
+                <h2>Health Analytics & Insights</h2>
+                <div class="date-filter">
+                    <select id="analytics-period">
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d" selected>Last 30 Days</option>
+                        <option value="90d">Last 90 Days</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="analytics-card full-width">
+                    <div class="chart-header">
+                        <h3>Health Trends Over Time</h3>
+                    </div>
+                    <canvas id="trendsChart" height="100"></canvas>
+                </div>
+                
+                <div class="analytics-card">
+                    <div class="chart-header">
+                        <h3>Location-wise Distribution</h3>
+                    </div>
+                    <canvas id="locationChart"></canvas>
+                </div>
+                
+                <div class="analytics-card">
+                    <div class="chart-header">
+                        <h3>Key Health Metrics</h3>
+                    </div>
+                    <div class="impact-list" id="health-metrics-list">
+                        <!-- Health metrics will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Settings Section -->
+        <section id="system" class="content-section">
+            <div class="section-header">
+                <h2>Health Department Settings</h2>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>Health Categories</h3>
+                    <div class="categories-list" id="health-categories-settings">
+                        <div class="category-item">
+                            <span>Mental Health</span>
+                            <div class="category-stats">0 cases</div>
+                        </div>
+                        <div class="category-item">
+                            <span>Women's Health</span>
+                            <div class="category-stats">0 cases</div>
+                        </div>
+                        <div class="category-item">
+                            <span>General Health</span>
+                            <div class="category-stats">0 cases</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>System Configuration</h3>
+                    <div class="config-options">
+                        <label class="config-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                            <span>Health Alerts</span>
+                        </label>
+                        <label class="config-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                            <span>Data Backup</span>
+                        </label>
+                        <label class="config-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                            <span>Maintenance Mode</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
     <script src="../../../Backend/Firebase/firebaseConfig.js"></script>
     <script>
         // Initialize Firebase
@@ -58,7 +298,9 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Check authentication and department access
+        let healthData = [];
+
+        // Authentication check
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = '../../../index.html';
@@ -75,8 +317,11 @@
             }
             
             // User is authenticated and has access
-            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('sidebar-user-name').textContent = user.email;
             console.log('Health department user logged in:', user.email);
+            
+            // Load dashboard data
+            loadHealthData();
         });
 
         function logout() {
@@ -84,6 +329,225 @@
                 window.location.href = '../../../index.html';
             });
         }
+
+        async function loadHealthData() {
+            try {
+                console.log('Fetching health data from Firestore...');
+                const querySnapshot = await db.collection('health').orderBy('submissionTimestamp', 'desc').get();
+                
+                healthData = [];
+                querySnapshot.forEach((doc) => {
+                    healthData.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                console.log(`Loaded ${healthData.length} health records`);
+                updateDashboardStats();
+                initializeHealthCharts();
+                loadRecentHealthSubmissions();
+                loadHealthConcerns();
+                populateHealthTable();
+                
+            } catch (error) {
+                console.error('Error loading health data:', error);
+                alert('Error loading health data: ' + error.message);
+            }
+        }
+
+        function updateDashboardStats() {
+            const totalRecords = healthData.length;
+            const mentalHealthCases = healthData.filter(record => 
+                record.depression || record.stress || record.mentalStigma || record.academicPressure
+            ).length;
+            const womensHealth = healthData.filter(record => 
+                record.gender === 'Female' && (
+                    record.contraception || record.irregularPeriods || record.menstrualPain || 
+                    record.pregnancyConcerns || record.sanitaryAccess
+                )
+            ).length;
+            const mensHealth = healthData.filter(record => 
+                record.gender === 'Male' && record.sexualHealthMale
+            ).length;
+
+            document.getElementById('total-health-records').textContent = totalRecords;
+            document.getElementById('mental-health-cases').textContent = mentalHealthCases;
+            document.getElementById('womens-health').textContent = womensHealth;
+            document.getElementById('mens-health').textContent = mensHealth;
+        }
+
+        function initializeHealthCharts() {
+            // Health Concerns Distribution Chart
+            const healthCtx = document.getElementById('healthChart').getContext('2d');
+            const healthConcerns = {
+                'Mental Health': healthData.filter(r => r.depression || r.stress || r.mentalStigma).length,
+                'Academic Pressure': healthData.filter(r => r.academicPressure).length,
+                'Sleep Issues': healthData.filter(r => r.sleepIssues).length,
+                'Physical Health': healthData.filter(r => r.flu || r.stomachIssues || r.sportsInjury).length,
+                'Women Health': healthData.filter(r => r.contraception || r.irregularPeriods || r.menstrualPain).length
+            };
+
+            new Chart(healthCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(healthConcerns),
+                    datasets: [{
+                        data: Object.values(healthConcerns),
+                        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff']
+                    }]
+                }
+            });
+
+            // Gender Distribution Chart
+            const genderCtx = document.getElementById('genderChart').getContext('2d');
+            const genderCounts = {
+                'Male': healthData.filter(r => r.gender === 'Male').length,
+                'Female': healthData.filter(r => r.gender === 'Female').length
+            };
+
+            new Chart(genderCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(genderCounts),
+                    datasets: [{
+                        data: Object.values(genderCounts),
+                        backgroundColor: ['#36a2eb', '#ff6384']
+                    }]
+                }
+            });
+        }
+
+        function loadRecentHealthSubmissions() {
+            const recentSubmissions = healthData.slice(0, 5);
+            const activityList = document.getElementById('recent-health-list');
+            
+            activityList.innerHTML = recentSubmissions.map(record => `
+                <div class="activity-item">
+                    <div class="activity-icon health">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="activity-content">
+                        <p class="activity-desc">${record.registrationNumber} - ${record.mainComplaint || 'Health concern'}</p>
+                        <span class="activity-time">${formatTimestamp(record.submissionTimestamp)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadHealthConcerns() {
+            const concerns = [
+                { name: 'Stress', count: healthData.filter(r => r.stress).length },
+                { name: 'Depression', count: healthData.filter(r => r.depression).length },
+                { name: 'Sleep Issues', count: healthData.filter(r => r.sleepIssues).length },
+                { name: 'Academic Pressure', count: healthData.filter(r => r.academicPressure).length }
+            ].filter(concern => concern.count > 0);
+
+            const concernsList = document.getElementById('health-concerns-list');
+            concernsList.innerHTML = concerns.map(concern => `
+                <div class="priority-item">
+                    <span class="priority-label">${concern.name}</span>
+                    <span class="priority-count">${concern.count}</span>
+                </div>
+            `).join('');
+        }
+
+        function populateHealthTable() {
+            const tableBody = document.getElementById('health-table-body');
+            
+            tableBody.innerHTML = healthData.map(record => `
+                <tr>
+                    <td>${record.registrationNumber || 'N/A'}</td>
+                    <td>${record.email || 'N/A'}</td>
+                    <td>${record.gender || 'N/A'}</td>
+                    <td>${record.location || 'N/A'}</td>
+                    <td>${record.mainComplaint || 'No specific complaint'}</td>
+                    <td>${(record.depression || record.stress || record.mentalStigma) ? 'Yes' : 'No'}</td>
+                    <td>${(record.contraception || record.irregularPeriods || record.menstrualPain) ? 'Yes' : 'No'}</td>
+                    <td>${formatTimestamp(record.submissionTimestamp)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewHealthDetails('${record.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'N/A';
+            
+            if (timestamp.toDate) {
+                const date = timestamp.toDate();
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            }
+            
+            return timestamp.toString();
+        }
+
+        function viewHealthDetails(recordId) {
+            const record = healthData.find(r => r.id === recordId);
+            if (record) {
+                alert(`Health Record Details:\n
+Registration: ${record.registrationNumber}\n
+Email: ${record.email}\n
+Gender: ${record.gender}\n
+Location: ${record.location}\n
+Main Complaint: ${record.mainComplaint}\n
+Mental Health Issues: ${record.depression || record.stress || record.mentalStigma ? 'Yes' : 'No'}\n
+Submitted: ${formatTimestamp(record.submissionTimestamp)}`);
+            }
+        }
+
+        function exportHealthData() {
+            // Simple CSV export
+            const headers = ['Registration', 'Email', 'Gender', 'Location', 'Main Complaint', 'Stress', 'Depression', 'Submitted'];
+            const csvData = healthData.map(record => [
+                record.registrationNumber || '',
+                record.email || '',
+                record.gender || '',
+                record.location || '',
+                record.mainComplaint || '',
+                record.stress ? 'Yes' : 'No',
+                record.depression ? 'Yes' : 'No',
+                formatTimestamp(record.submissionTimestamp)
+            ]);
+            
+            const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'health-data.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const contentSections = document.querySelectorAll('.content-section');
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const target = this.getAttribute('data-target');
+                    
+                    // Update active menu item
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show target section
+                    contentSections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === target) {
+                            section.classList.add('active');
+                            document.getElementById('page-title').textContent = 
+                                this.querySelector('span').textContent;
+                        }
+                    });
+                });
+            });
+        });
     </script>
 </body>
 </html>

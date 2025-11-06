@@ -3,54 +3,351 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Outreach Department - UOE Safe App</title>
+    <title>UoE Safe - Outreach Department</title>
     <link rel="stylesheet" href="../Styles/Dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <h1>UOE Safe App - Outreach Department</h1>
+    <!-- Navigation Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>UoE Safe</h2>
+            <p>Outreach Department</p>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="menu-item active" data-target="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </li>
+            <li class="menu-item" data-target="reports">
+                <i class="fas fa-flag"></i>
+                <span>Incident Reports</span>
+            </li>
+            <li class="menu-item" data-target="analytics">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports Analytics</span>
+            </li>
+            <li class="menu-item" data-target="system">
+                <i class="fas fa-cog"></i>
+                <span>System Settings</span>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
             <div class="user-info">
-                <span id="userEmail">Loading...</span>
-                <button onclick="logout()" class="logout-btn">Logout</button>
+                <div class="user-avatar">OD</div>
+                <div class="user-details">
+                    <span class="user-name" id="sidebar-user-name">Loading...</span>
+                    <span class="user-role">Outreach Department</span>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="content-header">
+            <div class="header-left">
+                <h1 id="page-title">Outreach Dashboard</h1>
+                <p id="page-subtitle">University of Eldoret Outreach Department</p>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search reports..." id="reports-search">
+                </div>
+                <div class="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notification-count">0</span>
+                </div>
             </div>
         </header>
-        
-        <main class="dashboard-main">
-            <div class="welcome-section">
-                <h2>Welcome to Outreach Department Dashboard</h2>
-                <p>Manage community outreach and safety programs</p>
-            </div>
-            
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <!-- Statistics Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>Total Programs</h3>
-                    <p class="stat-number" id="totalPrograms">0</p>
+                    <div class="stat-icon total-reports">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-reports">0</h3>
+                        <p>Total Reports</p>
+                    </div>
                 </div>
+                
                 <div class="stat-card">
-                    <h3>Active Events</h3>
-                    <p class="stat-number" id="activeEvents">0</p>
+                    <div class="stat-icon pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pending-reports">0</h3>
+                        <p>Pending Review</p>
+                    </div>
                 </div>
+                
                 <div class="stat-card">
-                    <h3>Community Reports</h3>
-                    <p class="stat-number" id="communityReports">0</p>
+                    <div class="stat-icon resolved">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="resolved-reports">0</h3>
+                        <p>Resolved</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon users">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="high-priority">0</h3>
+                        <p>High Priority</p>
+                    </div>
                 </div>
             </div>
-            
-            <div class="quick-actions">
-                <h3>Quick Actions</h3>
-                <div class="action-buttons">
-                    <button class="action-btn">View Programs</button>
-                    <button class="action-btn">Schedule Event</button>
-                    <button class="action-btn">Community Outreach</button>
+
+            <!-- Charts and Recent Activity -->
+            <div class="dashboard-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Reports by Category</h3>
+                    </div>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Status Distribution</h3>
+                    </div>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                
+                <div class="recent-activity">
+                    <div class="activity-header">
+                        <h3>Recent Reports</h3>
+                        <a href="#" class="view-all" onclick="showSection('reports')">View All</a>
+                    </div>
+                    <div class="activity-list" id="recent-reports-list">
+                        <!-- Recent reports will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="priority-stats">
+                    <div class="priority-header">
+                        <h3>Priority Breakdown</h3>
+                    </div>
+                    <div class="priority-list" id="priority-breakdown-list">
+                        <!-- Priority breakdown will be populated by JavaScript -->
+                    </div>
                 </div>
             </div>
-        </main>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="content-section">
+            <div class="section-header">
+                <h2>Incident Reports Management</h2>
+                <div class="header-actions">
+                    <div class="filters">
+                        <select id="status-filter">
+                            <option value="">All Status</option>
+                            <option value="submitted">Submitted</option>
+                            <option value="under investigation">Under Investigation</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="in progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                        <select id="priority-filter">
+                            <option value="">All Priorities</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                        <select id="category-filter">
+                            <option value="">All Categories</option>
+                            <option value="🔒 Security">Security</option>
+                            <option value="🏫 Facilities">Facilities</option>
+                            <option value="📚 Academics">Academics</option>
+                            <option value="💬 Harassment">Harassment</option>
+                            <option value="🧹 Sanitation">Sanitation</option>
+                            <option value="🧠 Mental Health">Mental Health</option>
+                            <option value="🌐 Cyber Safety">Cyber Safety</option>
+                            <option value="⚙ Other">Other</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="exportReportsData()">
+                        <i class="fas fa-download"></i> Export Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Location</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-table-body">
+                        <!-- Reports will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Reports Analytics Section -->
+        <section id="analytics" class="content-section">
+            <div class="section-header">
+                <h2>Reports Analytics & Insights</h2>
+                <div class="date-filter">
+                    <select id="analytics-period">
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d" selected>Last 30 Days</option>
+                        <option value="90d">Last 90 Days</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="analytics-card full-width">
+                    <div class="chart-header">
+                        <h3>Reports Trend Over Time</h3>
+                    </div>
+                    <canvas id="trendsChart" height="100"></canvas>
+                </div>
+                
+                <div class="analytics-card">
+                    <div class="chart-header">
+                        <h3>Location-wise Reports</h3>
+                    </div>
+                    <canvas id="locationChart"></canvas>
+                </div>
+                
+                <div class="analytics-card">
+                    <div class="chart-header">
+                        <h3>Key Metrics</h3>
+                    </div>
+                    <div class="impact-list" id="reports-metrics-list">
+                        <!-- Reports metrics will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Settings Section -->
+        <section id="system" class="content-section">
+            <div class="section-header">
+                <h2>Outreach Department Settings</h2>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>Report Categories</h3>
+                    <div class="categories-list" id="report-categories-settings">
+                        <!-- Categories will be populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>System Configuration</h3>
+                    <div class="config-options">
+                        <label class="config-switch">
+                            <input type="checkbox" checked id="notifications-toggle">
+                            <span class="slider"></span>
+                            <span>Report Notifications</span>
+                        </label>
+                        <label class="config-switch">
+                            <input type="checkbox" checked id="auto-backup-toggle">
+                            <span class="slider"></span>
+                            <span>Auto Backup</span>
+                        </label>
+                        <label class="config-switch">
+                            <input type="checkbox" id="maintenance-toggle">
+                            <span class="slider"></span>
+                            <span>Maintenance Mode</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Report Details Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Report Details</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Report details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn btn-primary" onclick="updateReportStatus()" id="update-status-btn">Update Status</button>
+            </div>
+        </div>
     </div>
 
+    <!-- Status Update Modal -->
+    <div id="statusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Update Report Status</h3>
+                <span class="close" onclick="closeStatusModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="status-select">New Status:</label>
+                    <select id="status-select" class="form-control">
+                        <option value="submitted">Submitted</option>
+                        <option value="under investigation">Under Investigation</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="admin-notes">Admin Notes:</label>
+                    <textarea id="admin-notes" class="form-control" rows="3" placeholder="Add notes about this status update..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="config-switch">
+                        <input type="checkbox" id="notify-user" checked>
+                        <span class="slider"></span>
+                        <span>Notify User about this update</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeStatusModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveStatusUpdate()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="../../../Backend/Firebase/firebaseConfig.js"></script>
     <script>
         // Initialize Firebase
@@ -58,7 +355,11 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Check authentication and department access
+        let reportsData = [];
+        let currentReportId = null;
+        let reportsListener = null;
+
+        // Authentication check
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = '../../../index.html';
@@ -75,14 +376,696 @@
             }
             
             // User is authenticated and has access
-            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('sidebar-user-name').textContent = user.email;
             console.log('Outreach department user logged in:', user.email);
+            
+            // Load dashboard data
+            setupRealTimeListener();
         });
 
         function logout() {
             auth.signOut().then(() => {
                 window.location.href = '../../../index.html';
             });
+        }
+
+        function setupRealTimeListener() {
+            // Remove existing listener if any
+            if (reportsListener) {
+                reportsListener();
+            }
+
+            // Set up real-time listener for reports
+            reportsListener = db.collection('reports')
+                .orderBy('timestamp', 'desc')
+                .onSnapshot((querySnapshot) => {
+                    reportsData = [];
+                    querySnapshot.forEach((doc) => {
+                        reportsData.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+
+                    console.log(`Loaded ${reportsData.length} reports in real-time`);
+                    updateDashboardStats();
+                    initializeReportsCharts();
+                    loadRecentReports();
+                    loadPriorityBreakdown();
+                    populateReportsTable();
+                }, (error) => {
+                    console.error('Error in real-time listener:', error);
+                });
+        }
+
+        function updateDashboardStats() {
+            const totalReports = reportsData.length;
+            const pendingReports = reportsData.filter(report => 
+                report.status === 'submitted' || !report.status
+            ).length;
+            const resolvedReports = reportsData.filter(report => 
+                report.status === 'resolved'
+            ).length;
+            const highPriority = reportsData.filter(report => 
+                report.priority === 'high' || report.priority === 'urgent'
+            ).length;
+
+            document.getElementById('total-reports').textContent = totalReports;
+            document.getElementById('pending-reports').textContent = pendingReports;
+            document.getElementById('resolved-reports').textContent = resolvedReports;
+            document.getElementById('high-priority').textContent = highPriority;
+            document.getElementById('notification-count').textContent = pendingReports;
+        }
+
+        function initializeReportsCharts() {
+            // Reports by Category Chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            const categoryCounts = {};
+            
+            reportsData.forEach(report => {
+                const category = report.category || 'Uncategorized';
+                categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+            });
+
+            // Destroy existing chart if it exists
+            if (window.categoryChartInstance) {
+                window.categoryChartInstance.destroy();
+            }
+
+            window.categoryChartInstance = new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(categoryCounts),
+                    datasets: [{
+                        label: 'Number of Reports',
+                        data: Object.values(categoryCounts),
+                        backgroundColor: '#36a2eb'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Status Distribution Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const statusCounts = {
+                'Submitted': reportsData.filter(r => r.status === 'submitted' || !r.status).length,
+                'Under Investigation': reportsData.filter(r => r.status === 'under investigation').length,
+                'Assigned': reportsData.filter(r => r.status === 'assigned').length,
+                'In Progress': reportsData.filter(r => r.status === 'in progress').length,
+                'Resolved': reportsData.filter(r => r.status === 'resolved').length
+            };
+
+            // Destroy existing chart if it exists
+            if (window.statusChartInstance) {
+                window.statusChartInstance.destroy();
+            }
+
+            window.statusChartInstance = new Chart(statusCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#ff6384', '#ffce56', '#36a2eb', '#4bc0c0', '#9966ff']
+                    }]
+                }
+            });
+        }
+
+        function loadRecentReports() {
+            const recentReports = reportsData.slice(0, 5);
+            const reportsList = document.getElementById('recent-reports-list');
+            
+            reportsList.innerHTML = recentReports.map(report => `
+                <div class="activity-item">
+                    <div class="activity-icon report">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="activity-content">
+                        <p class="activity-desc">${report.title || 'No title'}</p>
+                        <span class="activity-time">${formatTimestamp(report.timestamp)} • ${report.priority}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadPriorityBreakdown() {
+            const priorities = [
+                { name: 'High', count: reportsData.filter(r => r.priority === 'high').length },
+                { name: 'Urgent', count: reportsData.filter(r => r.priority === 'urgent').length },
+                { name: 'Medium', count: reportsData.filter(r => r.priority === 'medium').length },
+                { name: 'Low', count: reportsData.filter(r => r.priority === 'low').length }
+            ];
+
+            const priorityList = document.getElementById('priority-breakdown-list');
+            priorityList.innerHTML = priorities.map(priority => `
+                <div class="priority-item">
+                    <span class="priority-label ${priority.name.toLowerCase()}">${priority.name}</span>
+                    <span class="priority-count">${priority.count}</span>
+                </div>
+            `).join('');
+        }
+
+        function populateReportsTable() {
+            const tableBody = document.getElementById('reports-table-body');
+            const statusFilter = document.getElementById('status-filter').value;
+            const priorityFilter = document.getElementById('priority-filter').value;
+            const categoryFilter = document.getElementById('category-filter').value;
+            
+            let filteredReports = reportsData;
+
+            // Apply filters
+            if (statusFilter) {
+                filteredReports = filteredReports.filter(report => 
+                    report.status === statusFilter || (!report.status && statusFilter === 'submitted')
+                );
+            }
+            if (priorityFilter) {
+                filteredReports = filteredReports.filter(report => report.priority === priorityFilter);
+            }
+            if (categoryFilter) {
+                filteredReports = filteredReports.filter(report => report.category === categoryFilter);
+            }
+            
+            tableBody.innerHTML = filteredReports.map(report => `
+                <tr>
+                    <td>${report.id.substring(0, 8)}...</td>
+                    <td>${report.title || 'No title'}</td>
+                    <td>${report.category || 'Uncategorized'}</td>
+                    <td>
+                        <span class="priority-badge ${report.priority}">
+                            ${report.priority || 'medium'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${report.status}">
+                            ${report.status || 'submitted'}
+                        </span>
+                    </td>
+                    <td>${report.location || 'N/A'}</td>
+                    <td>${formatTimestamp(report.timestamp)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewReportDetails('${report.id}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="openStatusUpdate('${report.id}')">
+                            <i class="fas fa-edit"></i> Status
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewReportDetails(reportId) {
+            const report = reportsData.find(r => r.id === reportId);
+            if (report) {
+                currentReportId = reportId;
+                
+                const mediaInfo = report.mediaBase64 && report.mediaBase64.length > 0 ? 
+                    `${report.mediaBase64.length} media attachment(s)` : 'No media attachments';
+                
+                const audioInfo = report.audioUrls && report.audioUrls.length > 0 ? 
+                    `${report.audioUrls.length} audio recording(s)` : 'No audio recordings';
+
+                const details = `
+                    <div class="report-details">
+                        <div class="detail-row">
+                            <label>Report ID:</label>
+                            <span>${report.id}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Title:</label>
+                            <span>${report.title || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Description:</label>
+                            <span>${report.description || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Category:</label>
+                            <span>${report.category || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Priority:</label>
+                            <span class="priority-badge ${report.priority}">${report.priority || 'medium'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Status:</label>
+                            <span class="status-badge ${report.status}">${report.status || 'submitted'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Location:</label>
+                            <span>${report.location || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>ADM Number:</label>
+                            <span>${report.admNo || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Gender:</label>
+                            <span>${report.gender || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Anonymous:</label>
+                            <span>${report.anonymous ? 'Yes' : 'No'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Media:</label>
+                            <span>${mediaInfo}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Audio:</label>
+                            <span>${audioInfo}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Submitted Date:</label>
+                            <span>${report.submittedDate || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Student ID:</label>
+                            <span>${report.studentId || 'N/A'}</span>
+                        </div>
+                        ${report.assignedDate ? `
+                        <div class="detail-row">
+                            <label>Assigned Date:</label>
+                            <span>${formatTimestamp(report.assignedDate)}</span>
+                        </div>
+                        ` : ''}
+                        ${report.investigationDate ? `
+                        <div class="detail-row">
+                            <label>Investigation Date:</label>
+                            <span>${formatTimestamp(report.investigationDate)}</span>
+                        </div>
+                        ` : ''}
+                        ${report.resolvedDate ? `
+                        <div class="detail-row">
+                            <label>Resolved Date:</label>
+                            <span>${formatTimestamp(report.resolvedDate)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                document.getElementById('modal-title').textContent = 'Report Details';
+                document.getElementById('modal-body').innerHTML = details;
+                document.getElementById('reportModal').style.display = 'block';
+            }
+        }
+
+        function openStatusUpdate(reportId) {
+            currentReportId = reportId;
+            const report = reportsData.find(r => r.id === reportId);
+            
+            if (report) {
+                document.getElementById('status-select').value = report.status || 'submitted';
+                document.getElementById('admin-notes').value = '';
+                document.getElementById('statusModal').style.display = 'block';
+            }
+        }
+
+        async function saveStatusUpdate() {
+            if (!currentReportId) return;
+
+            const newStatus = document.getElementById('status-select').value;
+            const adminNotes = document.getElementById('admin-notes').value;
+            const notifyUser = document.getElementById('notify-user').checked;
+            const report = reportsData.find(r => r.id === currentReportId);
+
+            if (!report) return;
+
+            try {
+                const updateData = {
+                    status: newStatus,
+                    lastUpdated: new Date()
+                };
+
+                // Add timestamps based on status
+                if (newStatus === 'under investigation' && !report.investigationDate) {
+                    updateData.investigationDate = new Date();
+                } else if (newStatus === 'assigned' && !report.assignedDate) {
+                    updateData.assignedDate = new Date();
+                } else if (newStatus === 'resolved' && !report.resolvedDate) {
+                    updateData.resolvedDate = new Date();
+                }
+
+                // Add admin notes if provided
+                if (adminNotes) {
+                    updateData.adminNotes = adminNotes;
+                    updateData.lastAdminUpdate = new Date();
+                }
+
+                await db.collection('reports').doc(currentReportId).update(updateData);
+
+                // Notify user if requested
+                if (notifyUser && report.studentId) {
+                    await createUserNotification(report.studentId, currentReportId, newStatus, adminNotes);
+                }
+
+                // Also notify admins about the status update
+                await createAdminNotification(currentReportId, newStatus, report.title);
+
+                closeStatusModal();
+                showToast('Status updated successfully!', 'success');
+
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showToast('Failed to update status: ' + error.message, 'error');
+            }
+        }
+
+        async function createUserNotification(userId, reportId, newStatus, notes) {
+            try {
+                const statusMessages = {
+                    'under investigation': 'is now under investigation',
+                    'assigned': 'has been assigned to our team',
+                    'in progress': 'is currently being worked on',
+                    'resolved': 'has been resolved'
+                };
+
+                const message = `Your report "${getReportTitle(reportId)}" ${statusMessages[newStatus] || 'has been updated'}.${notes ? ` Notes: ${notes}` : ''}`;
+
+                const notification = {
+                    title: '📢 Report Status Update',
+                    message: message,
+                    userId: userId,
+                    reportId: reportId,
+                    read: false,
+                    type: 'status_update',
+                    timestamp: new Date()
+                };
+
+                await db.collection('notifications').add(notification);
+                console.log('User notification created successfully');
+
+            } catch (error) {
+                console.error('Error creating user notification:', error);
+            }
+        }
+
+        async function createAdminNotification(reportId, newStatus, reportTitle) {
+            try {
+                // Get all admin users
+                const adminSnapshot = await db.collection('adminUsers').get();
+                
+                const notification = {
+                    title: '🔄 Report Status Changed',
+                    message: `Report "${reportTitle}" status changed to ${newStatus}`,
+                    reportId: reportId,
+                    read: false,
+                    type: 'admin_status_update',
+                    timestamp: new Date()
+                };
+
+                // Create notification for each admin
+                const promises = adminSnapshot.docs.map(adminDoc => {
+                    const adminNotification = {
+                        ...notification,
+                        userId: adminDoc.id
+                    };
+                    return db.collection('notifications').add(adminNotification);
+                });
+
+                await Promise.all(promises);
+                console.log('Admin notifications created successfully');
+
+            } catch (error) {
+                console.error('Error creating admin notifications:', error);
+            }
+        }
+
+        function getReportTitle(reportId) {
+            const report = reportsData.find(r => r.id === reportId);
+            return report ? report.title : 'Unknown Report';
+        }
+
+        function updateReportStatus() {
+            closeModal();
+            openStatusUpdate(currentReportId);
+        }
+
+        function closeModal() {
+            document.getElementById('reportModal').style.display = 'none';
+            currentReportId = null;
+        }
+
+        function closeStatusModal() {
+            document.getElementById('statusModal').style.display = 'none';
+            currentReportId = null;
+        }
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'N/A';
+            
+            if (timestamp.toDate) {
+                const date = timestamp.toDate();
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            }
+            
+            return timestamp.toString();
+        }
+
+        function showToast(message, type = 'info') {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                border-radius: 4px;
+                z-index: 10000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            `;
+
+            document.body.appendChild(toast);
+
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+
+        function exportReportsData() {
+            const headers = ['ID', 'Title', 'Category', 'Priority', 'Status', 'Location', 'ADM No', 'Gender', 'Anonymous', 'Submitted Date', 'Student ID'];
+            const csvData = reportsData.map(report => [
+                report.id,
+                report.title || '',
+                report.category || '',
+                report.priority || '',
+                report.status || '',
+                report.location || '',
+                report.admNo || '',
+                report.gender || '',
+                report.anonymous ? 'Yes' : 'No',
+                report.submittedDate || '',
+                report.studentId || ''
+            ]);
+            
+            const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reports-data.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showToast('Data exported successfully!', 'success');
+        }
+
+        function showSection(sectionId) {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const contentSections = document.querySelectorAll('.content-section');
+            
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-target') === sectionId) {
+                    item.classList.add('active');
+                }
+            });
+            
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === sectionId) {
+                    section.classList.add('active');
+                    document.getElementById('page-title').textContent = 
+                        document.querySelector(`[data-target="${sectionId}"] span`).textContent;
+                }
+            });
+        }
+
+        // Add CSS for badges and modals
+        const style = document.createElement('style');
+        style.textContent = `
+            .priority-badge {
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+                color: white;
+            }
+            .priority-badge.high { background: #ff4444; }
+            .priority-badge.urgent { background: #ff0000; }
+            .priority-badge.medium { background: #ff9800; }
+            .priority-badge.low { background: #4caf50; }
+            
+            .status-badge {
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+                color: white;
+            }
+            .status-badge.submitted { background: #2196F3; }
+            .status-badge.under investigation { background: #FF9800; }
+            .status-badge.assigned { background: #9C27B0; }
+            .status-badge.in progress { background: #673AB7; }
+            .status-badge.resolved { background: #4CAF50; }
+            
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+            }
+            
+            .modal-content {
+                background-color: white;
+                margin: 5% auto;
+                padding: 0;
+                border-radius: 8px;
+                width: 80%;
+                max-width: 600px;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            
+            .modal-header {
+                padding: 20px;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                justify-content: between;
+                align-items: center;
+            }
+            
+            .modal-header h3 {
+                margin: 0;
+                flex: 1;
+            }
+            
+            .close {
+                font-size: 24px;
+                cursor: pointer;
+                color: #aaa;
+            }
+            
+            .close:hover {
+                color: #000;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-footer {
+                padding: 20px;
+                border-top: 1px solid #eee;
+                text-align: right;
+            }
+            
+            .report-details .detail-row {
+                display: flex;
+                margin-bottom: 10px;
+                padding: 8px 0;
+                border-bottom: 1px solid #f5f5f5;
+            }
+            
+            .report-details .detail-row label {
+                font-weight: bold;
+                width: 150px;
+                color: #666;
+            }
+            
+            .report-details .detail-row span {
+                flex: 1;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-control {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            
+            .form-control:focus {
+                outline: none;
+                border-color: #36a2eb;
+            }
+            
+            .priority-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            
+            .priority-label.high { color: #ff4444; font-weight: bold; }
+            .priority-label.urgent { color: #ff0000; font-weight: bold; }
+            .priority-label.medium { color: #ff9800; }
+            .priority-label.low { color: #4caf50; }
+        `;
+        document.head.appendChild(style);
+
+        // Setup filter event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const contentSections = document.querySelectorAll('.content-section');
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const target = this.getAttribute('data-target');
+                    showSection(target);
+                });
+            });
+
+            // Add filter change listeners
+            document.getElementById('status-filter').addEventListener('change', populateReportsTable);
+            document.getElementById('priority-filter').addEventListener('change', populateReportsTable);
+            document.getElementById('category-filter').addEventListener('change', populateReportsTable);
+        });
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const reportModal = document.getElementById('reportModal');
+            const statusModal = document.getElementById('statusModal');
+            
+            if (event.target === reportModal) {
+                closeModal();
+            }
+            if (event.target === statusModal) {
+                closeStatusModal();
+            }
         }
     </script>
 </body>
