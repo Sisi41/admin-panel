@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outreach Department - UOE Safe App</title>
+    <link rel="stylesheet" href="../Styles/Dashboard.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>UOE Safe App - Outreach Department</h1>
+            <div class="user-info">
+                <span id="userEmail">Loading...</span>
+                <button onclick="logout()" class="logout-btn">Logout</button>
+            </div>
+        </header>
+        
+        <main class="dashboard-main">
+            <div class="welcome-section">
+                <h2>Welcome to Outreach Department Dashboard</h2>
+                <p>Manage community outreach and safety programs</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Programs</h3>
+                    <p class="stat-number" id="totalPrograms">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Events</h3>
+                    <p class="stat-number" id="activeEvents">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Community Reports</h3>
+                    <p class="stat-number" id="communityReports">0</p>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="action-buttons">
+                    <button class="action-btn">View Programs</button>
+                    <button class="action-btn">Schedule Event</button>
+                    <button class="action-btn">Community Outreach</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../../Backend/Firebase/firebaseConfig.js"></script>
+    <script>
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Check authentication and department access
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '../../../index.html';
+                return;
+            }
+            
+            // Verify this is an outreach department user
+            const userDoc = await db.collection('adminUsers').doc(user.uid).get();
+            if (!userDoc.exists || !userDoc.data().departments.includes('outreach')) {
+                alert('Access denied. Outreach department access required.');
+                await auth.signOut();
+                window.location.href = '../../../index.html';
+                return;
+            }
+            
+            // User is authenticated and has access
+            document.getElementById('userEmail').textContent = user.email;
+            console.log('Outreach department user logged in:', user.email);
+        });
+
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = '../../../index.html';
+            });
+        }
+    </script>
+</body>
+</html>

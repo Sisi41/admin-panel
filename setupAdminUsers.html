@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup Admin Users - UOE Safe App</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        button { background: #2a5298; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #1e3c72; }
+        button:disabled { background: #cccccc; cursor: not-allowed; }
+        #status { margin-top: 20px; padding: 15px; border-radius: 5px; }
+        .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .info { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+        .user-info { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>UOE Safe App - Admin Users Setup</h1>
+    <p>This script will create the admin users for Health and Outreach departments.</p>
+    
+    <button onclick="initializeAndCreateUsers()" id="setupBtn">Create Admin Users</button>
+    <div id="status"></div>
+
+    <script>
+        // Firebase Configuration - PASTE YOUR ACTUAL CONFIG HERE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDd2WAsCCByRA_tOFTBRXXuc6dqmy0FMOA",
+            authDomain: "e-food-c9a3b.firebaseapp.com",
+            databaseURL: "https://e-food-c9a3b-default-rtdb.firebaseio.com",
+            projectId: "e-food-c9a3b",
+            storageBucket: "e-food-c9a3b.firebasestorage.app",
+            messagingSenderId: "125459222035",
+            appId: "1:125459222035:web:ea98df06d17d46941c79e6",
+            measurementId: "G-ERG6P9568M"
+        };
+
+        let auth, db;
+        let isInitialized = false;
+
+        // Initialize Firebase first
+        function initializeFirebase() {
+            try {
+                // Check if Firebase is already initialized
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                auth = firebase.auth();
+                db = firebase.firestore();
+                isInitialized = true;
+                console.log('Firebase initialized successfully');
+                showStatus('Firebase initialized successfully', 'info');
+                return true;
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+                showStatus('Failed to initialize Firebase: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        async function initializeAndCreateUsers() {
+            const setupBtn = document.getElementById('setupBtn');
+            
+            setupBtn.disabled = true;
+            setupBtn.textContent = 'Creating Users...';
+            
+            try {
+                showStatus('Starting user creation process...', 'info');
+                
+                // Initialize Firebase
+                if (!isInitialized) {
+                    const initialized = initializeFirebase();
+                    if (!initialized) {
+                        throw new Error('Firebase initialization failed');
+                    }
+                }
+
+                // Create health department user
+                showStatus('Creating Health Department user...', 'info');
+                const healthUser = await createUser('health@uoeld.co.ke', '@Healthuoe', 'health');
+                
+                // Create outreach department user  
+                showStatus('Creating Outreach Department user...', 'info');
+                const outreachUser = await createUser('outreach@uoeld.co.ke', '@Outreachuoe', 'outreach');
+
+                // Display success message
+                const successHTML = `
+                    <div class="success">
+                        <h3>✅ Admin Users Created Successfully!</h3>
+                        <div class="user-info">
+                            <strong>Health Department:</strong><br>
+                            Email: health@uoeld.co.ke<br>
+                            UID: ${healthUser.uid}
+                        </div>
+                        <div class="user-info">
+                            <strong>Outreach Department:</strong><br>
+                            Email: outreach@uoeld.co.ke<br>
+                            UID: ${outreachUser.uid}
+                        </div>
+                        <p><strong>Next Steps:</strong></p>
+                        <ol>
+                            <li>Test the login in your main application</li>
+                            <li>Delete this setup file for security</li>
+                            <li>Set up your Firestore security rules</li>
+                        </ol>
+                    </div>
+                `;
+                showStatus(successHTML, 'success');
+
+            } catch (error) {
+                console.error('Setup error:', error);
+                let errorMessage = error.message;
+                
+                // More user-friendly error messages
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'One or more users already exist. You can try logging in directly.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak. Please use a stronger password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address format.';
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    errorMessage = 'Email/password accounts are not enabled. Please enable them in Firebase Console.';
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMessage = 'Network error. Please check your internet connection.';
+                }
+                
+                showStatus(`<strong>Error:</strong> ${errorMessage}`, 'error');
+                setupBtn.disabled = false;
+                setupBtn.textContent = 'Try Again';
+            }
+        }
+
+        async function createUser(email, password, department) {
+            try {
+                // Create user in Firebase Authentication
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                console.log(`Created ${department} user:`, user.uid);
+                showStatus(`Created ${department} user with UID: ${user.uid}`, 'info');
+
+                // Create admin document in Firestore
+                await db.collection('adminUsers').doc(user.uid).set({
+                    email: email,
+                    departments: [department],
+                    role: 'admin',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                console.log(`Created admin document for ${department}`);
+                showStatus(`Created admin document for ${department}`, 'info');
+                return user;
+
+            } catch (error) {
+                console.error(`Error creating ${department} user:`, error);
+                throw error;
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            if (type === 'success' || type === 'error' || type === 'info') {
+                status.innerHTML = `<div class="${type}">${message}</div>`;
+            } else {
+                status.innerHTML = message;
+            }
+        }
+
+        // Initialize Firebase when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('Page loaded. Click "Create Admin Users" to start.', 'info');
+            initializeFirebase();
+        });
+    </script>
+</body>
+</html>

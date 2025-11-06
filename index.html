@@ -3,351 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UoE Safe - Admin Panel</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <title>UOE Safe App - Admin Panel</title>
+    <link rel="stylesheet" href="./frontend/Styles/index.css">
+    
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <!-- Navigation Sidebar -->
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <h2>UoE Safe</h2>
-            <p>Admin Panel</p>
-        </div>
-        
-        <ul class="sidebar-menu">
-            <li class="menu-item active" data-target="dashboard">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Dashboard</span>
-            </li>
-            <li class="menu-item" data-target="reports">
-                <i class="fas fa-file-alt"></i>
-                <span>Reports</span>
-            </li>
-            <li class="menu-item" data-target="users">
-                <i class="fas fa-users"></i>
-                <span>User Management</span>
-            </li>
-            <li class="menu-item" data-target="analytics">
-                <i class="fas fa-chart-bar"></i>
-                <span>Analytics</span>
-            </li>
-            <li class="menu-item" data-target="system">
-                <i class="fas fa-cog"></i>
-                <span>System Settings</span>
-            </li>
-        </ul>
-        
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div class="user-avatar">AD</div>
-                <div class="user-details">
-                    <span class="user-name">Admin User</span>
-                    <span class="user-role">Super Admin</span>
-                </div>
-            </div>
-            <button class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Header -->
-        <header class="content-header">
-            <div class="header-left">
-                <h1 id="page-title">Dashboard</h1>
-                <p id="page-subtitle">Welcome to UoE Safe Admin Panel</p>
-            </div>
-            <div class="header-right">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
-                <div class="notifications">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">3</span>
-                </div>
-            </div>
+    <div class="container">
+        <header>
+            <h1>UOE Safe App</h1>
+            <p>Admin Panel - Enhancing safety and security at the University of Eldoret</p>
         </header>
 
-        <!-- Dashboard Section -->
-        <section id="dashboard" class="content-section active">
-            <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon total-reports">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="total-reports">0</h3>
-                        <p>Total Reports</p>
-                    </div>
+        <div class="card-container">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Admin Login</h2>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon pending">
-                        <i class="fas fa-clock"></i>
+                <div class="card-body">
+                    <div class="department-selector">
+                        <div class="department-btn active" data-department="health">Health Department</div>
+                        <div class="department-btn" data-department="outreach">Outreach Department</div>
                     </div>
-                    <div class="stat-info">
-                        <h3 id="pending-reports">0</h3>
-                        <p>Pending Cases</p>
-                    </div>
+                    
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="btn" id="loginBtn">
+                            <span class="btn-text">Login</span>
+                            <div class="spinner hidden" id="spinner"></div>
+                        </button>
+                    </form>
+                    
+                    <div id="alertMessage" class="alert"></div>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon resolved">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="resolved-reports">0</h3>
-                        <p>Resolved Issues</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon users">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="active-users">0</h3>
-                        <p>Active Users</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts and Recent Activity -->
-            <div class="dashboard-grid">
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <h3>Reports by Category</h3>
-                    </div>
-                    <canvas id="categoryChart"></canvas>
-                </div>
-                
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <h3>Monthly Trends</h3>
-                    </div>
-                    <canvas id="trendChart"></canvas>
-                </div>
-                
-                <div class="recent-activity">
-                    <div class="activity-header">
-                        <h3>Recent Activity</h3>
-                        <a href="#" class="view-all">View All</a>
-                    </div>
-                    <div class="activity-list" id="recent-activity-list">
-                        <!-- Activity items will be populated by JavaScript -->
-                    </div>
-                </div>
-                
-                <div class="priority-stats">
-                    <div class="priority-header">
-                        <h3>Priority Distribution</h3>
-                    </div>
-                    <div class="priority-list" id="priority-list">
-                        <!-- Priority items will be populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Reports Section -->
-        <section id="reports" class="content-section">
-            <div class="section-header">
-                <h2>Report Management</h2>
-                <div class="header-actions">
-                    <div class="filters">
-                        <select id="status-filter">
-                            <option value="">All Status</option>
-                            <option value="submitted">Submitted</option>
-                            <option value="under_review">Under Review</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                        </select>
-                        <select id="category-filter">
-                            <option value="">All Categories</option>
-                            <option value="infrastructure">Infrastructure</option>
-                            <option value="security">Security</option>
-                            <option value="harassment">Harassment</option>
-                            <option value="medical">Medical</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-primary" id="export-reports">
-                        <i class="fas fa-download"></i> Export
-                    </button>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Report ID</th>
-                            <th>Title</th>
-                            <th>Category</th>
-                            <th>Priority</th>
-                            <th>Status</th>
-                            <th>Submitted</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reports-table-body">
-                        <!-- Reports will be populated by JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <div class="pagination">
-                <button id="prev-page" class="page-btn">Previous</button>
-                <span id="page-info">Page 1 of 1</span>
-                <button id="next-page" class="page-btn">Next</button>
-            </div>
-        </section>
-
-        <!-- User Management Section -->
-        <section id="users" class="content-section">
-            <div class="section-header">
-                <h2>User Management</h2>
-                <button class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add User
-                </button>
-            </div>
-
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>User ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Department</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-table-body">
-                        <!-- Users will be populated by JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Analytics Section -->
-        <section id="analytics" class="content-section">
-            <div class="section-header">
-                <h2>Analytics & Insights</h2>
-                <div class="date-filter">
-                    <select id="analytics-period">
-                        <option value="7d">Last 7 Days</option>
-                        <option value="30d" selected>Last 30 Days</option>
-                        <option value="90d">Last 90 Days</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="analytics-grid">
-                <div class="analytics-card full-width">
-                    <div class="chart-header">
-                        <h3>Reports Over Time</h3>
-                    </div>
-                    <canvas id="timeChart" height="100"></canvas>
-                </div>
-                
-                <div class="analytics-card">
-                    <div class="chart-header">
-                        <h3>Resolution Time by Category</h3>
-                    </div>
-                    <canvas id="resolutionChart"></canvas>
-                </div>
-                
-                <div class="analytics-card">
-                    <div class="chart-header">
-                        <h3>Location Hotspots</h3>
-                    </div>
-                    <div class="hotspot-list" id="hotspot-list">
-                        <!-- Hotspots will be populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- System Settings Section -->
-        <section id="system" class="content-section">
-            <div class="section-header">
-                <h2>System Settings</h2>
-            </div>
-
-            <div class="settings-grid">
-                <div class="settings-card">
-                    <h3>Report Categories</h3>
-                    <div class="categories-list" id="categories-list">
-                        <!-- Categories will be populated by JavaScript -->
-                    </div>
-                    <div class="add-category">
-                        <input type="text" id="new-category" placeholder="New category name">
-                        <button class="btn btn-secondary">Add Category</button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <h3>Priority Settings</h3>
-                    <div class="priority-settings" id="priority-settings">
-                        <!-- Priority settings will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <h3>Department Management</h3>
-                    <div class="departments-list" id="departments-list">
-                        <!-- Departments will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <h3>System Configuration</h3>
-                    <div class="config-options">
-                        <label class="config-switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                            <span>Email Notifications</span>
-                        </label>
-                        <label class="config-switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                            <span>Auto-assign Reports</span>
-                        </label>
-                        <label class="config-switch">
-                            <input type="checkbox">
-                            <span class="slider"></span>
-                            <span>Maintenance Mode</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Modal for Report Details -->
-    <div id="report-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Report Details</h3>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body" id="report-details">
-                <!-- Report details will be populated by JavaScript -->
             </div>
         </div>
+
+        <footer>
+            <p>University of Eldoret &copy; 2023 | Safe App Admin Panel</p>
+        </footer>
     </div>
 
-    <!-- Scripts -->
-    <script src="data/sample-data.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Load scripts in correct order -->
+    <script src="./Backend/Firebase/firebaseConfig.js"></script>
+    <script src="./Backend/pages/index.js"></script>
 </body>
 </html>
