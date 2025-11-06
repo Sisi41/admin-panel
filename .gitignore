@@ -1,3 +1,35 @@
-./Backend/Firebase/FirebaseConfig.js
-./Backend/Firebase/credentials.txt
-./setupAdminUsers.html
+# Node modules and dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment and credentials
+Backend/Firebase/credentials.txt
+Backend/.env
+Backend/Firebase/firebaseConfig.js
+
+# System and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Build and cache files
+dist/
+build/
+.cache/
+*.log
+
+# Temporary uploads or local assets
+uploads/
+temp/
+*.tmp
+
+# Other optional exclusions
+.env.local
+.env.development.local
+.env.production.local
+
+# Ignore generated HTML setup files if needed
+setupAdminUsers.html
