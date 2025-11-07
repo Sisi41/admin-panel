@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initialize form with default department
+    // Initialize form with default department`s
     emailInput.placeholder = `${departmentInfo.health.hint}`;
     console.log('📝 Initial placeholder set to:', emailInput.placeholder);
 
